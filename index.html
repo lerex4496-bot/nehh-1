@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>For You ❤️</title>
   
-  <!-- Google Fonts: Playfair Display, Cormorant Garamond & Dancing Script -->
+  <!-- Google Fonts: Cormorant Garamond & Dancing Script -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -52,12 +52,8 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Smooth custom scrolling & soft glow */
     body {
       margin: 0;
       padding: 0;
@@ -69,10 +65,10 @@
       -webkit-tap-highlight-color: transparent;
     }
     .glass-card {
-      background: rgba(255, 255, 255, 0.72);
+      background: rgba(255, 255, 255, 0.75);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.85);
       box-shadow: 0 10px 30px -10px rgba(224, 150, 175, 0.22);
     }
     .glass-dark {
@@ -82,15 +78,19 @@
       border: 1px solid rgba(244, 194, 209, 0.2);
       box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.6);
     }
-    .soft-shadow {
-      box-shadow: 0 8px 25px rgba(236, 72, 116, 0.15);
-    }
     @keyframes pulseGlow {
       0%, 100% { opacity: 0.6; transform: scale(1); }
       50% { opacity: 1; transform: scale(1.06); }
     }
     .heart-glow {
       animation: pulseGlow 3.5s ease-in-out infinite;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.4s ease-out forwards;
     }
   </style>
 </head>
@@ -100,12 +100,12 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // --- CENTRAL CONFIGURATION DATA ---
-    const DEFAULT_CONFIG = {
+    // --- CONFIGURATION ---
+    const CONFIG = {
       herName: "My Dearest",
       myName: "Me",
       duration: "almost 5 years",
-      whatsAppNumber: "91916764653",
+      whatsAppNumber: "919106764653", // Updated India code (+91) with 9106764653
       whatsAppMessage: "Hey... I finished reading the website. Let's talk properly. ❤️",
       photos: [
         {
@@ -123,7 +123,7 @@
       ]
     };
 
-    // --- AMBIENT SOUND GENERATOR (Zero external audio file dependencies) ---
+    // --- AMBIENT SOUND GENERATOR ---
     class AmbientChords {
       constructor() {
         this.ctx = null;
@@ -161,7 +161,6 @@
         }
         this.isPlaying = true;
         
-        // Gentle warm pentatonic chords: Fmaj9, Cmaj7, Dm9, Bbmaj7
         const progression = [
           [174.61, 220.00, 261.63, 329.63], // F, A, C, E
           [130.81, 196.00, 246.94, 329.63], // C, G, B, E
@@ -204,8 +203,7 @@
         };
         window.addEventListener('resize', handleResize);
 
-        // Petals & particles
-        const particles = Array.from({ length: 28 }).map(() => ({
+        const particles = Array.from({ length: 26 }).map(() => ({
           x: Math.random() * width,
           y: Math.random() * height,
           radius: Math.random() * 2.5 + 1.2,
@@ -215,7 +213,6 @@
           color: Math.random() > 0.4 ? '#fca5b9' : '#d5bbf9'
         }));
 
-        // Fluttering butterflies
         const butterflies = Array.from({ length: 4 }).map(() => ({
           x: Math.random() * width,
           y: Math.random() * height,
@@ -229,7 +226,6 @@
         const render = () => {
           ctx.clearRect(0, 0, width, height);
 
-          // Draw particles
           particles.forEach((p) => {
             p.y += p.speedY;
             p.x += Math.sin(p.y * 0.01) * 0.4;
@@ -245,7 +241,6 @@
             ctx.fill();
           });
 
-          // Draw butterflies
           butterflies.forEach((b) => {
             b.x += b.vx;
             b.y += Math.sin(b.x * 0.02) * 0.8 + b.vy;
@@ -265,12 +260,10 @@
             ctx.fillStyle = isDark ? "rgba(254, 205, 225, 0.65)" : "rgba(236, 72, 116, 0.45)";
             ctx.globalAlpha = 0.7;
 
-            // Left wing
             ctx.beginPath();
             ctx.ellipse(-b.wingSpan * 0.5 * Math.abs(wingScale), 0, b.wingSpan * 0.6 * Math.abs(wingScale), b.wingSpan * 0.4, -0.3, 0, Math.PI * 2);
             ctx.fill();
 
-            // Right wing
             ctx.beginPath();
             ctx.ellipse(b.wingSpan * 0.5 * Math.abs(wingScale), 0, b.wingSpan * 0.6 * Math.abs(wingScale), b.wingSpan * 0.4, 0.3, 0, Math.PI * 2);
             ctx.fill();
@@ -301,27 +294,15 @@
     function App() {
       const [step, setStep] = useState(0);
       const [musicOn, setMusicOn] = useState(false);
-      const [config, setConfig] = useState(() => {
-        const saved = localStorage.getItem("apology_site_config");
-        return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-      });
-      const [showSettings, setShowSettings] = useState(false);
 
       // Branch states
-      const [forgiveChoice, setForgiveChoice] = useState(null); // 'yes' | 'not-yet' | 'space'
+      const [forgiveChoice, setForgiveChoice] = useState(null);
       const [q1Answer, setQ1Answer] = useState(null);
       const [q2Answer, setQ2Answer] = useState(null);
-      const [tryChoice, setTryChoice] = useState(null); // 'yes' | 'not-sure' | 'no'
-      const [proposalChoice, setProposalChoice] = useState(null); // 'yes' | 'time'
-      const [meetChoice, setMeetChoice] = useState(null); // 'yes' | 'talk-first' | 'space'
-      const [waChoice, setWaChoice] = useState(null); // 'not-ready' | null
-
-      // Save custom config
-      const handleSaveConfig = (newCfg) => {
-        setConfig(newCfg);
-        localStorage.setItem("apology_site_config", JSON.stringify(newCfg));
-        setShowSettings(false);
-      };
+      const [tryChoice, setTryChoice] = useState(null);
+      const [proposalChoice, setProposalChoice] = useState(null);
+      const [meetChoice, setMeetChoice] = useState(null);
+      const [waChoice, setWaChoice] = useState(null);
 
       const toggleMusic = () => {
         if (!musicOn) {
@@ -348,7 +329,7 @@
         <div className={`min-h-screen relative flex flex-col font-sans transition-colors duration-1000 ${isDarkMode ? 'bg-[#0f0914] text-[#f8e9ee]' : 'bg-gradient-to-br from-blush-50 via-cream-50 to-lavender-100 text-[#372b33]'}`}>
           <CanvasBackground isDark={isDarkMode} />
 
-          {/* Top subtle controls bar */}
+          {/* Top subtle controls bar (music only) */}
           <header className="relative z-20 flex justify-between items-center px-5 py-4 max-w-md mx-auto w-full">
             <div className="flex items-center space-x-2">
               <span className="font-handwritten text-xl text-blush-500 font-bold tracking-wide">
@@ -357,7 +338,6 @@
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* Music toggle */}
               <button
                 onClick={toggleMusic}
                 aria-label="Ambient music"
@@ -373,19 +353,6 @@
                 <span className="text-[11px] font-medium hidden sm:inline">
                   {musicOn ? 'Soft Sound On' : 'Soft Sound'}
                 </span>
-              </button>
-
-              {/* Personalize Button */}
-              <button
-                onClick={() => setShowSettings(true)}
-                title="Personalize details"
-                className={`p-2.5 rounded-full text-xs transition-all ${
-                  isDarkMode 
-                    ? 'bg-white/10 text-pink-200 hover:bg-white/20' 
-                    : 'bg-white/80 text-gray-600 hover:bg-white shadow-sm'
-                }`}
-              >
-                ⚙️
               </button>
             </div>
           </header>
@@ -422,7 +389,7 @@
 
             {step === 3 && (
               <SectionTimeline
-                config={config}
+                config={CONFIG}
                 onContinue={nextStep}
               />
             )}
@@ -463,7 +430,7 @@
 
             {step === 9 && (
               <SectionFinalScreen
-                config={config}
+                config={CONFIG}
                 meetChoice={meetChoice}
                 setMeetChoice={setMeetChoice}
                 waChoice={waChoice}
@@ -484,15 +451,6 @@
           <footer className="relative z-10 text-center py-4 text-xs opacity-50">
             <span>Made with all my heart ❤️</span>
           </footer>
-
-          {/* Settings Modal */}
-          {showSettings && (
-            <SettingsModal
-              config={config}
-              onClose={() => setShowSettings(false)}
-              onSave={handleSaveConfig}
-            />
-          )}
         </div>
       );
     }
@@ -581,7 +539,6 @@
               </p>
             </div>
 
-            {/* Non-coercive Choice buttons */}
             {forgiveChoice === null && (
               <div className="mt-8 pt-4 border-t border-blush-100">
                 <p className="text-center font-serif text-lg text-gray-700 italic mb-4">
@@ -604,7 +561,6 @@
               </div>
             )}
 
-            {/* Flow if YES */}
             {forgiveChoice === 'yes' && (
               <div className="mt-6 p-4 rounded-2xl bg-blush-50 border border-blush-200 animate-fadeIn">
                 <div className="flex items-center gap-2 mb-2 text-blush-500">
@@ -624,7 +580,6 @@
               </div>
             )}
 
-            {/* Flow if NOT YET */}
             {forgiveChoice === 'not-yet' && (
               <div className="mt-6 p-4 rounded-2xl bg-lavender-50 border border-lavender-200 animate-fadeIn">
                 <p className="font-handwritten text-2xl font-bold text-gray-800 mb-1">
@@ -653,7 +608,6 @@
               </div>
             )}
 
-            {/* Flow if I NEED SPACE */}
             {forgiveChoice === 'space' && (
               <div className="mt-6 p-5 rounded-2xl bg-cream-100 border border-cream-200 text-center animate-fadeIn">
                 <p className="font-handwritten text-2xl text-gray-800 font-bold mb-2">
@@ -774,7 +728,6 @@
             <div className="relative pl-6 border-l-2 border-blush-200 space-y-6 my-4">
               {timelineItems.map((item, idx) => (
                 <div key={idx} className="relative group">
-                  {/* Timeline dot */}
                   <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 ${item.highlight ? 'bg-blush-500 border-white ring-2 ring-blush-300' : 'bg-white border-blush-400'}`} />
 
                   <div>
@@ -791,10 +744,6 @@
                           src={item.photo}
                           alt={item.caption || "Our memory"}
                           className="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                          onError={(e) => {
-                            // Fallback placeholder if custom image fails
-                            e.target.src = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80";
-                          }}
                         />
                         {item.caption && (
                           <p className="p-2.5 text-xs text-gray-500 italic text-center font-serif">
@@ -851,9 +800,7 @@
                   ].map((option, idx) => (
                     <button
                       key={idx}
-                      onClick={() => {
-                        setQ1(option);
-                      }}
+                      onClick={() => setQ1(option)}
                       className={`w-full py-3 px-4 rounded-xl text-sm font-medium border text-left transition-all ${
                         q1 === option
                           ? 'bg-blush-100 border-blush-400 text-blush-600 shadow-sm'
@@ -1041,7 +988,6 @@
               </div>
             )}
 
-            {/* If YES */}
             {choice === 'yes' && (
               <div className="mt-6 p-4 rounded-2xl bg-blush-50 border border-blush-200 animate-fadeIn text-center">
                 <p className="text-sm font-medium text-gray-800 mb-2">
@@ -1059,7 +1005,6 @@
               </div>
             )}
 
-            {/* If NOT SURE */}
             {choice === 'not-sure' && (
               <div className="mt-6 p-4 rounded-2xl bg-lavender-50 border border-lavender-200 animate-fadeIn">
                 <p className="text-sm text-gray-800 font-medium mb-2">
@@ -1077,7 +1022,6 @@
               </div>
             )}
 
-            {/* If NO */}
             {choice === 'no' && (
               <div className="mt-6 p-5 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn text-center">
                 <p className="font-serif text-base text-gray-800 italic mb-2">
@@ -1103,7 +1047,7 @@
     }
 
     // ==========================================
-    // STEP 7: THE REAL PROBLEM (CASTE / REALITY)
+    // STEP 7: THE REAL PROBLEM
     // ==========================================
     function SectionTheRealProblem({ onContinue }) {
       return (
@@ -1151,13 +1095,12 @@
     }
 
     // ==========================================
-    // STEP 8: THE FINAL PROPOSAL (SPECIAL DARK ROMANTIC)
+    // STEP 8: THE FINAL PROPOSAL (DARK ROMANTIC)
     // ==========================================
     function SectionFinalProposal({ choice, setChoice, onContinue }) {
       return (
         <div className="w-full">
           <div className="glass-dark rounded-3xl p-6 sm:p-8 shadow-2xl border border-pink-400/20 text-pink-50 text-center">
-            {/* Glowing Heart Icon */}
             <div className="inline-block p-4 rounded-full bg-pink-500/10 mb-4 heart-glow border border-pink-500/20">
               <span className="text-4xl">💖</span>
             </div>
@@ -1248,7 +1191,7 @@
     }
 
     // ==========================================
-    // STEP 9: FINAL SCREEN & OPTIONAL WHATSAPP
+    // STEP 9: FINAL SCREEN & DIRECT WHATSAPP
     // ==========================================
     function SectionFinalScreen({ config, meetChoice, setMeetChoice, waChoice, setWaChoice, onRestart }) {
       const waLink = `https://wa.me/${config.whatsAppNumber}?text=${encodeURIComponent(config.whatsAppMessage)}`;
@@ -1318,7 +1261,7 @@
               </div>
             )}
 
-            {/* Optional WhatsApp CTA */}
+            {/* Direct WhatsApp CTA */}
             <div className="pt-4 border-t border-gray-100">
               <p className="text-xs text-center text-gray-500 mb-3">
                 If you want to continue this conversation with me...
@@ -1357,141 +1300,6 @@
                 className="text-xs text-blush-400 hover:text-blush-500 underline underline-offset-4"
               >
                 Read from beginning
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ==========================================
-    // PERSONALIZATION & SETTINGS MODAL
-    // ==========================================
-    function SettingsModal({ config, onClose, onSave }) {
-      const [formData, setFormData] = useState({ ...config });
-
-      const handlePhotoChange = (index, field, value) => {
-        const updated = [...formData.photos];
-        updated[index] = { ...updated[index], [field]: value };
-        setFormData({ ...formData, photos: updated });
-      };
-
-      const handleFileUpload = (index, file) => {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          handlePhotoChange(index, 'url', reader.result);
-        };
-        reader.readAsDataURL(file);
-      };
-
-      return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 max-h-[88vh] overflow-y-auto shadow-2xl border border-pink-100">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
-              <div>
-                <h3 className="font-bold text-gray-900 text-lg">Personalize This Journey</h3>
-                <p className="text-xs text-gray-500">Edit names, photos &amp; phone number</p>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 text-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs text-gray-700">
-              <div>
-                <label className="font-semibold block mb-1">Relationship Duration</label>
-                <input
-                  type="text"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
-                  placeholder="e.g. almost 5 years"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold block mb-1">WhatsApp Number (with country code)</label>
-                <input
-                  type="text"
-                  value={formData.whatsAppNumber}
-                  onChange={(e) => setFormData({ ...formData, whatsAppNumber: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
-                  placeholder="e.g. 91916764653"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold block mb-1">WhatsApp Pre-filled Message</label>
-                <textarea
-                  rows="2"
-                  value={formData.whatsAppMessage}
-                  onChange={(e) => setFormData({ ...formData, whatsAppMessage: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
-                />
-              </div>
-
-              <div className="pt-2 border-t border-gray-100">
-                <label className="font-semibold block mb-2 text-gray-800">Photos in Timeline (3 Slots)</label>
-                {formData.photos.map((item, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-xl mb-3 space-y-2 border border-gray-100">
-                    <p className="font-medium text-blush-500">Photo Slot #{idx + 1}</p>
-                    <input
-                      type="text"
-                      placeholder="Image URL or upload below"
-                      value={item.url}
-                      onChange={(e) => handlePhotoChange(idx, 'url', e.target.value)}
-                      className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs"
-                    />
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id={`upload-${idx}`}
-                        className="hidden"
-                        onChange={(e) => handleFileUpload(idx, e.target.files[0])}
-                      />
-                      <label
-                        htmlFor={`upload-${idx}`}
-                        className="cursor-pointer py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[11px] hover:bg-gray-100 font-medium"
-                      >
-                        📁 Choose photo from device
-                      </label>
-                      {item.url && (
-                        <span className="text-[10px] text-green-600 font-medium">✓ Ready</span>
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Caption"
-                      value={item.caption}
-                      onChange={(e) => handlePhotoChange(idx, 'caption', e.target.value)}
-                      className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-gray-100 flex gap-2">
-              <button
-                onClick={() => onSave(formData)}
-                className="flex-1 py-2.5 rounded-xl bg-blush-500 text-white font-medium text-xs shadow-md"
-              >
-                Save Changes
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("apology_site_config");
-                  setFormData(DEFAULT_CONFIG);
-                  onSave(DEFAULT_CONFIG);
-                }}
-                className="py-2.5 px-3 rounded-xl border border-gray-200 text-gray-500 text-xs"
-              >
-                Reset Default
               </button>
             </div>
           </div>
