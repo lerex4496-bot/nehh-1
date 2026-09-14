@@ -1,0 +1,1505 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>For You ❤️</title>
+  
+  <!-- Google Fonts: Playfair Display, Cormorant Garamond & Dancing Script -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            handwritten: ['"Dancing Script"', 'cursive'],
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            blush: {
+              50: '#fff5f7',
+              100: '#ffe8ed',
+              200: '#ffd0da',
+              300: '#fca5b9',
+              400: '#f87192',
+              500: '#ec4874',
+            },
+            lavender: {
+              50: '#faf7fe',
+              100: '#f3ebfd',
+              200: '#e7d6fc',
+              300: '#d5bbf9',
+            },
+            cream: {
+              50: '#fdfcf9',
+              100: '#f9f6f0',
+              200: '#f2ece0',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React, ReactDOM, Babel for in-browser rendering -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Smooth custom scrolling & soft glow */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #fff9fa;
+      color: #3b2d35;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 30px -10px rgba(224, 150, 175, 0.22);
+    }
+    .glass-dark {
+      background: rgba(26, 17, 30, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(244, 194, 209, 0.2);
+      box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.6);
+    }
+    .soft-shadow {
+      box-shadow: 0 8px 25px rgba(236, 72, 116, 0.15);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    .heart-glow {
+      animation: pulseGlow 3.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- CENTRAL CONFIGURATION DATA ---
+    const DEFAULT_CONFIG = {
+      herName: "My Dearest",
+      myName: "Me",
+      duration: "almost 5 years",
+      whatsAppNumber: "91916764653",
+      whatsAppMessage: "Hey... I finished reading the website. Let's talk properly. ❤️",
+      photos: [
+        {
+          caption: "When everything felt effortless",
+          url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          caption: "The laughter that made all the noise fade away",
+          url: "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=600&q=80"
+        },
+        {
+          caption: "A quiet moment I still hold onto",
+          url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80"
+        }
+      ]
+    };
+
+    // --- AMBIENT SOUND GENERATOR (Zero external audio file dependencies) ---
+    class AmbientChords {
+      constructor() {
+        this.ctx = null;
+        this.isPlaying = false;
+        this.timer = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+      playChord(freqs, time, duration) {
+        freqs.forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, time);
+
+          gain.gain.setValueAtTime(0, time);
+          gain.gain.linearRampToValueAtTime(0.025, time + 1.8);
+          gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(time);
+          osc.stop(time + duration);
+        });
+      }
+      start() {
+        this.init();
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.isPlaying = true;
+        
+        // Gentle warm pentatonic chords: Fmaj9, Cmaj7, Dm9, Bbmaj7
+        const progression = [
+          [174.61, 220.00, 261.63, 329.63], // F, A, C, E
+          [130.81, 196.00, 246.94, 329.63], // C, G, B, E
+          [146.83, 220.00, 261.63, 293.66], // D, A, C, D
+          [116.54, 174.61, 233.08, 293.66]  // Bb, F, Bb, D
+        ];
+        
+        let index = 0;
+        const loop = () => {
+          if (!this.isPlaying) return;
+          const now = this.ctx.currentTime;
+          this.playChord(progression[index % progression.length], now, 6.5);
+          index++;
+          this.timer = setTimeout(loop, 4500);
+        };
+        loop();
+      }
+      stop() {
+        this.isPlaying = false;
+        if (this.timer) clearTimeout(this.timer);
+      }
+    }
+
+    const ambientAudio = new AmbientChords();
+
+    // --- CANVAS PARTICLES & BUTTERFLIES ---
+    const CanvasBackground = ({ isDark }) => {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        const handleResize = () => {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', handleResize);
+
+        // Petals & particles
+        const particles = Array.from({ length: 28 }).map(() => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 2.5 + 1.2,
+          speedY: Math.random() * 0.4 + 0.2,
+          speedX: Math.sin(Math.random() * Math.PI * 2) * 0.3,
+          alpha: Math.random() * 0.4 + 0.2,
+          color: Math.random() > 0.4 ? '#fca5b9' : '#d5bbf9'
+        }));
+
+        // Fluttering butterflies
+        const butterflies = Array.from({ length: 4 }).map(() => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          wingSpan: 10 + Math.random() * 6,
+          flutterSpeed: 0.15 + Math.random() * 0.1,
+          flutterPhase: Math.random() * Math.PI,
+          vx: 0.4 + Math.random() * 0.4,
+          vy: (Math.random() - 0.5) * 0.5
+        }));
+
+        const render = () => {
+          ctx.clearRect(0, 0, width, height);
+
+          // Draw particles
+          particles.forEach((p) => {
+            p.y += p.speedY;
+            p.x += Math.sin(p.y * 0.01) * 0.4;
+            if (p.y > height) {
+              p.y = -10;
+              p.x = Math.random() * width;
+            }
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = isDark ? p.alpha * 0.8 : p.alpha * 0.5;
+            ctx.fill();
+          });
+
+          // Draw butterflies
+          butterflies.forEach((b) => {
+            b.x += b.vx;
+            b.y += Math.sin(b.x * 0.02) * 0.8 + b.vy;
+            b.flutterPhase += b.flutterSpeed;
+
+            if (b.x > width + 30) {
+              b.x = -30;
+              b.y = Math.random() * (height * 0.8);
+            }
+
+            const wingScale = Math.sin(b.flutterPhase);
+
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            ctx.rotate(Math.sin(b.x * 0.02) * 0.2);
+
+            ctx.fillStyle = isDark ? "rgba(254, 205, 225, 0.65)" : "rgba(236, 72, 116, 0.45)";
+            ctx.globalAlpha = 0.7;
+
+            // Left wing
+            ctx.beginPath();
+            ctx.ellipse(-b.wingSpan * 0.5 * Math.abs(wingScale), 0, b.wingSpan * 0.6 * Math.abs(wingScale), b.wingSpan * 0.4, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Right wing
+            ctx.beginPath();
+            ctx.ellipse(b.wingSpan * 0.5 * Math.abs(wingScale), 0, b.wingSpan * 0.6 * Math.abs(wingScale), b.wingSpan * 0.4, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+          });
+
+          animationFrameId = requestAnimationFrame(render);
+        };
+
+        render();
+
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, [isDark]);
+
+      return (
+        <canvas
+          ref={canvasRef}
+          className="fixed inset-0 pointer-events-none z-0"
+        />
+      );
+    };
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      const [step, setStep] = useState(0);
+      const [musicOn, setMusicOn] = useState(false);
+      const [config, setConfig] = useState(() => {
+        const saved = localStorage.getItem("apology_site_config");
+        return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+      });
+      const [showSettings, setShowSettings] = useState(false);
+
+      // Branch states
+      const [forgiveChoice, setForgiveChoice] = useState(null); // 'yes' | 'not-yet' | 'space'
+      const [q1Answer, setQ1Answer] = useState(null);
+      const [q2Answer, setQ2Answer] = useState(null);
+      const [tryChoice, setTryChoice] = useState(null); // 'yes' | 'not-sure' | 'no'
+      const [proposalChoice, setProposalChoice] = useState(null); // 'yes' | 'time'
+      const [meetChoice, setMeetChoice] = useState(null); // 'yes' | 'talk-first' | 'space'
+      const [waChoice, setWaChoice] = useState(null); // 'not-ready' | null
+
+      // Save custom config
+      const handleSaveConfig = (newCfg) => {
+        setConfig(newCfg);
+        localStorage.setItem("apology_site_config", JSON.stringify(newCfg));
+        setShowSettings(false);
+      };
+
+      const toggleMusic = () => {
+        if (!musicOn) {
+          ambientAudio.start();
+          setMusicOn(true);
+        } else {
+          ambientAudio.stop();
+          setMusicOn(false);
+        }
+      };
+
+      const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const nextStep = () => {
+        setStep(prev => prev + 1);
+        scrollToTop();
+      };
+
+      const isDarkMode = step === 8;
+
+      return (
+        <div className={`min-h-screen relative flex flex-col font-sans transition-colors duration-1000 ${isDarkMode ? 'bg-[#0f0914] text-[#f8e9ee]' : 'bg-gradient-to-br from-blush-50 via-cream-50 to-lavender-100 text-[#372b33]'}`}>
+          <CanvasBackground isDark={isDarkMode} />
+
+          {/* Top subtle controls bar */}
+          <header className="relative z-20 flex justify-between items-center px-5 py-4 max-w-md mx-auto w-full">
+            <div className="flex items-center space-x-2">
+              <span className="font-handwritten text-xl text-blush-500 font-bold tracking-wide">
+                {step > 0 ? "with love & honesty" : "a gentle note"}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {/* Music toggle */}
+              <button
+                onClick={toggleMusic}
+                aria-label="Ambient music"
+                className={`p-2.5 rounded-full text-xs flex items-center gap-1.5 transition-all ${
+                  musicOn
+                    ? 'bg-blush-400 text-white shadow-md'
+                    : isDarkMode 
+                      ? 'bg-white/10 text-pink-200 hover:bg-white/20' 
+                      : 'bg-white/80 text-gray-600 hover:bg-white shadow-sm'
+                }`}
+              >
+                <span>{musicOn ? '🎵' : '🔇'}</span>
+                <span className="text-[11px] font-medium hidden sm:inline">
+                  {musicOn ? 'Soft Sound On' : 'Soft Sound'}
+                </span>
+              </button>
+
+              {/* Personalize Button */}
+              <button
+                onClick={() => setShowSettings(true)}
+                title="Personalize details"
+                className={`p-2.5 rounded-full text-xs transition-all ${
+                  isDarkMode 
+                    ? 'bg-white/10 text-pink-200 hover:bg-white/20' 
+                    : 'bg-white/80 text-gray-600 hover:bg-white shadow-sm'
+                }`}
+              >
+                ⚙️
+              </button>
+            </div>
+          </header>
+
+          {/* Progress hint for sections (1 through 9) */}
+          {step > 0 && step < 10 && (
+            <div className="relative z-10 w-full max-w-md mx-auto px-6 mb-2">
+              <div className="h-1 w-full bg-black/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blush-300 to-blush-500 transition-all duration-700"
+                  style={{ width: `${(step / 9) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Main content container */}
+          <main className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 py-4 w-full max-w-md mx-auto">
+            {step === 0 && (
+              <LandingScreen onOpen={() => nextStep()} />
+            )}
+
+            {step === 1 && (
+              <SectionApology
+                forgiveChoice={forgiveChoice}
+                setForgiveChoice={setForgiveChoice}
+                onContinue={nextStep}
+              />
+            )}
+
+            {step === 2 && (
+              <SectionWhatIMeant onContinue={nextStep} />
+            )}
+
+            {step === 3 && (
+              <SectionTimeline
+                config={config}
+                onContinue={nextStep}
+              />
+            )}
+
+            {step === 4 && (
+              <SectionInteractive
+                q1={q1Answer}
+                setQ1={setQ1Answer}
+                q2={q2Answer}
+                setQ2={setQ2Answer}
+                onContinue={nextStep}
+              />
+            )}
+
+            {step === 5 && (
+              <SectionPromises onContinue={nextStep} />
+            )}
+
+            {step === 6 && (
+              <SectionWantToTry
+                choice={tryChoice}
+                setChoice={setTryChoice}
+                onContinue={nextStep}
+              />
+            )}
+
+            {step === 7 && (
+              <SectionTheRealProblem onContinue={nextStep} />
+            )}
+
+            {step === 8 && (
+              <SectionFinalProposal
+                choice={proposalChoice}
+                setChoice={setProposalChoice}
+                onContinue={nextStep}
+              />
+            )}
+
+            {step === 9 && (
+              <SectionFinalScreen
+                config={config}
+                meetChoice={meetChoice}
+                setMeetChoice={setMeetChoice}
+                waChoice={waChoice}
+                setWaChoice={setWaChoice}
+                onRestart={() => {
+                  setStep(0);
+                  setForgiveChoice(null);
+                  setTryChoice(null);
+                  setProposalChoice(null);
+                  setMeetChoice(null);
+                  setWaChoice(null);
+                }}
+              />
+            )}
+          </main>
+
+          {/* Discreet footer */}
+          <footer className="relative z-10 text-center py-4 text-xs opacity-50">
+            <span>Made with all my heart ❤️</span>
+          </footer>
+
+          {/* Settings Modal */}
+          {showSettings && (
+            <SettingsModal
+              config={config}
+              onClose={() => setShowSettings(false)}
+              onSave={handleSaveConfig}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 0: LANDING SCREEN
+    // ==========================================
+    function LandingScreen({ onOpen }) {
+      const [opening, setOpening] = useState(false);
+
+      const handleOpen = () => {
+        setOpening(true);
+        setTimeout(() => {
+          onOpen();
+        }, 650);
+      };
+
+      return (
+        <div className={`w-full text-center transition-all duration-700 ${opening ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+          <div className="glass-card rounded-3xl p-8 py-10 shadow-xl border border-white/60 relative overflow-hidden">
+            <div className="inline-block p-4 rounded-full bg-blush-100/60 mb-5 heart-glow">
+              <span className="text-4xl">🦋</span>
+            </div>
+
+            <h1 className="font-handwritten text-5xl sm:text-6xl text-blush-500 font-bold mb-3 tracking-wide">
+              Hey... ❤️
+            </h1>
+
+            <p className="font-serif text-2xl text-gray-700 italic mb-6">
+              I made something for you.
+            </p>
+
+            <div className="space-y-2 text-sm text-gray-600 leading-relaxed font-normal mb-8 px-2">
+              <p>Not to win an argument.</p>
+              <p>Not to prove that I&apos;m right.</p>
+              <p className="font-medium text-gray-800 pt-1">
+                Just to say something I should have said properly.
+              </p>
+            </div>
+
+            <button
+              onClick={handleOpen}
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blush-400 to-blush-500 hover:from-blush-500 hover:to-blush-600 text-white font-medium shadow-md shadow-blush-300/40 hover:shadow-lg transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 text-base"
+            >
+              <span>Open it</span>
+              <span className="text-lg">🦋</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 1: THE APOLOGY
+    // ==========================================
+    function SectionApology({ forgiveChoice, setForgiveChoice, onContinue }) {
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-blush-400 text-xl">✨</span>
+              <h2 className="font-handwritten text-4xl text-blush-500 font-bold">
+                First, I&apos;m sorry.
+              </h2>
+            </div>
+
+            <div className="text-gray-700 leading-relaxed space-y-3.5 text-sm sm:text-base font-normal">
+              <p className="font-semibold text-gray-900 text-base">
+                I know I messed up.
+              </p>
+              <div className="pl-3 border-l-2 border-blush-200 space-y-1 text-gray-600 italic">
+                <p>I was insecure.</p>
+                <p>I was scared.</p>
+                <p>I had too many doubts in my head.</p>
+              </div>
+              <p>
+                But none of that gives me the right to take your phone, take your SIM, repeatedly question you, or make you feel like you have to prove yourself to me.
+              </p>
+              <div className="space-y-1.5 py-1 text-gray-800 font-medium">
+                <p>• You deserve trust.</p>
+                <p>• You deserve your own space.</p>
+                <p>• You deserve to feel safe with me.</p>
+              </div>
+              <p className="text-blush-500 font-medium pt-1">
+                I&apos;m genuinely sorry for making you feel otherwise.
+              </p>
+            </div>
+
+            {/* Non-coercive Choice buttons */}
+            {forgiveChoice === null && (
+              <div className="mt-8 pt-4 border-t border-blush-100">
+                <p className="text-center font-serif text-lg text-gray-700 italic mb-4">
+                  Do you forgive me?
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setForgiveChoice('yes')}
+                    className="py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm transition-all shadow-sm active:scale-95"
+                  >
+                    Yes ❤️
+                  </button>
+                  <button
+                    onClick={() => setForgiveChoice('not-yet')}
+                    className="py-3 px-4 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-medium text-sm transition-all active:scale-95"
+                  >
+                    Not yet
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Flow if YES */}
+            {forgiveChoice === 'yes' && (
+              <div className="mt-6 p-4 rounded-2xl bg-blush-50 border border-blush-200 animate-fadeIn">
+                <div className="flex items-center gap-2 mb-2 text-blush-500">
+                  <span>🦋</span>
+                  <p className="font-handwritten text-2xl font-bold">Thank you.</p>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                  Forgiveness doesn&apos;t mean everything magically becomes okay. I want to earn your trust again through what I do — not just what I say.
+                </p>
+                <button
+                  onClick={onContinue}
+                  className="w-full py-2.5 rounded-xl bg-blush-400 text-white font-medium text-sm shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <span>Keep going</span>
+                  <span>🦋</span>
+                </button>
+              </div>
+            )}
+
+            {/* Flow if NOT YET */}
+            {forgiveChoice === 'not-yet' && (
+              <div className="mt-6 p-4 rounded-2xl bg-lavender-50 border border-lavender-200 animate-fadeIn">
+                <p className="font-handwritten text-2xl font-bold text-gray-800 mb-1">
+                  That&apos;s okay.
+                </p>
+                <p className="text-xs text-blush-500 uppercase tracking-widest font-semibold mb-2">
+                  I won&apos;t force you.
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                  If you&apos;re angry, hurt, confused, or simply need time, you have every right to feel that way. Can I still tell you what I&apos;ve been unable to say properly?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={onContinue}
+                    className="py-2.5 px-3 rounded-xl bg-blush-400 text-white font-medium text-xs shadow-sm hover:bg-blush-500"
+                  >
+                    Okay, tell me
+                  </button>
+                  <button
+                    onClick={() => setForgiveChoice('space')}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-gray-200 text-gray-600 font-medium text-xs"
+                  >
+                    I need space
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Flow if I NEED SPACE */}
+            {forgiveChoice === 'space' && (
+              <div className="mt-6 p-5 rounded-2xl bg-cream-100 border border-cream-200 text-center animate-fadeIn">
+                <p className="font-handwritten text-2xl text-gray-800 font-bold mb-2">
+                  Then take your space.
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  I won&apos;t turn my apology into pressure. Whenever you&apos;re ready, I&apos;ll still be here.
+                </p>
+                <p className="text-xs text-blush-400 italic">
+                  Come back when you&apos;re ready ❤️
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 2: WHAT I REALLY MEANT
+    // ==========================================
+    function SectionWhatIMeant({ onContinue }) {
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <h2 className="font-handwritten text-3xl sm:text-4xl text-blush-500 font-bold mb-4 leading-tight">
+              I wasn&apos;t trying to control you... but I understand that I did.
+            </h2>
+
+            <div className="text-gray-700 text-sm sm:text-base leading-relaxed space-y-4 font-normal">
+              <p>
+                When I took your phone and SIM, my intention in my head was that I wanted answers.
+              </p>
+
+              <div className="bg-blush-50/70 p-3.5 rounded-xl border border-blush-100 space-y-1 text-sm text-gray-700">
+                <p>• I wanted you to talk.</p>
+                <p>• I wanted to understand what was happening.</p>
+                <p>• I wanted to hear everything from you.</p>
+              </div>
+
+              <p className="font-medium text-gray-900 border-l-2 border-blush-400 pl-3">
+                But intention doesn&apos;t erase impact.
+              </p>
+
+              <p className="text-gray-600">
+                You felt controlled. You felt unsafe. You felt like I was behaving as if I had the right to decide things for you.
+              </p>
+
+              <p className="font-semibold text-gray-800">
+                And you were right to be angry.
+              </p>
+
+              <div className="space-y-1 text-sm text-gray-700 bg-lavender-50/60 p-3.5 rounded-xl border border-lavender-100">
+                <p>I should have listened instead of investigating.</p>
+                <p>I should have asked instead of taking.</p>
+                <p>I should have trusted instead of assuming.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={onContinue}
+              className="mt-7 w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>One more thing...</span>
+              <span>✨</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 3: FIVE YEARS TIMELINE
+    // ==========================================
+    function SectionTimeline({ config, onContinue }) {
+      const timelineItems = [
+        {
+          period: "Then",
+          text: "We met. We became friends. We started becoming important to each other.",
+          photo: config.photos[0]?.url,
+          caption: config.photos[0]?.caption
+        },
+        {
+          period: "Somewhere along the way",
+          text: "We became more than friends. We chose each other.",
+          photo: config.photos[1]?.url,
+          caption: config.photos[1]?.caption
+        },
+        {
+          period: "After that",
+          text: "We laughed. We fought. We made memories. We hurt each other. We forgave each other. We kept coming back.",
+          photo: config.photos[2]?.url,
+          caption: config.photos[2]?.caption
+        },
+        {
+          period: "Recently",
+          text: "We stopped talking properly. We stopped sitting together and simply talking. Small things became big fights. Doubts became louder than conversations.",
+          photo: null
+        },
+        {
+          period: "Today",
+          text: `And somehow... I still don't want to throw away ${config.duration} without trying to become better.`,
+          photo: null,
+          highlight: true
+        }
+      ];
+
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="text-center mb-6">
+              <span className="text-xs uppercase tracking-widest text-blush-400 font-semibold">Our Journey</span>
+              <h2 className="font-handwritten text-4xl text-blush-500 font-bold mt-1">
+                {config.duration}...
+              </h2>
+            </div>
+
+            <div className="relative pl-6 border-l-2 border-blush-200 space-y-6 my-4">
+              {timelineItems.map((item, idx) => (
+                <div key={idx} className="relative group">
+                  {/* Timeline dot */}
+                  <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 ${item.highlight ? 'bg-blush-500 border-white ring-2 ring-blush-300' : 'bg-white border-blush-400'}`} />
+
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-blush-500 font-sans">
+                      {item.period}
+                    </span>
+                    <p className={`text-sm mt-1 leading-relaxed ${item.highlight ? 'font-medium text-gray-900 bg-blush-50/80 p-3 rounded-xl border border-blush-100' : 'text-gray-700'}`}>
+                      {item.text}
+                    </p>
+
+                    {item.photo && (
+                      <div className="mt-3 rounded-2xl overflow-hidden border border-white/80 shadow-sm bg-white/40">
+                        <img
+                          src={item.photo}
+                          alt={item.caption || "Our memory"}
+                          className="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            // Fallback placeholder if custom image fails
+                            e.target.src = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80";
+                          }}
+                        />
+                        {item.caption && (
+                          <p className="p-2.5 text-xs text-gray-500 italic text-center font-serif">
+                            &ldquo;{item.caption}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={onContinue}
+              className="mt-6 w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>Can I ask you something?</span>
+              <span>🦋</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 4: A LITTLE INTERACTIVE
+    // ==========================================
+    function SectionInteractive({ q1, setQ1, q2, setQ2, onContinue }) {
+      const [stage, setStage] = useState(q1 ? 2 : 1);
+
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <h2 className="font-handwritten text-4xl text-blush-500 font-bold mb-2 text-center">
+              Can I ask you something?
+            </h2>
+            <p className="text-xs text-center text-gray-500 mb-6 font-serif italic">
+              There is no right or wrong answer. Just your truth.
+            </p>
+
+            {stage === 1 && (
+              <div className="space-y-4">
+                <p className="text-sm sm:text-base font-medium text-gray-800 text-center">
+                  When you think about us, what&apos;s the first thing you remember?
+                </p>
+
+                <div className="grid grid-cols-1 gap-2.5 pt-2">
+                  {[
+                    "Our friendship ❤️",
+                    "Our stupid fights 😂",
+                    "The good memories",
+                    "Everything"
+                  ].map((option, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setQ1(option);
+                      }}
+                      className={`w-full py-3 px-4 rounded-xl text-sm font-medium border text-left transition-all ${
+                        q1 === option
+                          ? 'bg-blush-100 border-blush-400 text-blush-600 shadow-sm'
+                          : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-blush-50'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+
+                {q1 && (
+                  <div className="mt-5 p-4 rounded-2xl bg-blush-50 border border-blush-100 animate-fadeIn text-center">
+                    <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                      Whatever your answer was... I hope somewhere inside it, there&apos;s still a little piece of us.
+                    </p>
+                    <button
+                      onClick={() => setStage(2)}
+                      className="py-2 px-6 rounded-xl bg-blush-400 text-white text-xs font-medium shadow-sm hover:bg-blush-500"
+                    >
+                      Next question →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {stage === 2 && (
+              <div className="space-y-4 animate-fadeIn">
+                <p className="text-sm sm:text-base font-medium text-gray-800 text-center">
+                  Do you think two people can become better for each other instead of giving up on each other?
+                </p>
+
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  {["Yes", "Maybe", "I don't know"].map((choice, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQ2(choice)}
+                      className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-medium border text-center transition-all ${
+                        q2 === choice
+                          ? 'bg-blush-100 border-blush-400 text-blush-600 shadow-sm'
+                          : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-blush-50'
+                      }`}
+                    >
+                      {choice}
+                    </button>
+                  ))}
+                </div>
+
+                {q2 && (
+                  <div className="mt-5 p-4 rounded-2xl bg-lavender-50 border border-lavender-100 animate-fadeIn text-center">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">
+                      Thank you for your honesty
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                      I know change isn&apos;t proven by words. Let me tell you what I can honestly promise you.
+                    </p>
+                    <button
+                      onClick={onContinue}
+                      className="w-full py-2.5 rounded-xl bg-blush-400 text-white text-xs font-medium shadow-sm hover:bg-blush-500"
+                    >
+                      See what I promise 🦋
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 5: WHAT I PROMISE
+    // ==========================================
+    function SectionPromises({ onContinue }) {
+      const promises = [
+        {
+          cant: "I can't promise I'll never feel insecure.",
+          can: "But I can promise that I'll learn how to handle that insecurity without controlling you."
+        },
+        {
+          cant: "I can't promise we'll never fight.",
+          can: "But I can promise I'll work on how I fight."
+        },
+        {
+          cant: "I can't promise I'll always understand you immediately.",
+          can: "But I can promise I'll listen."
+        },
+        {
+          cant: "I can't promise the future will be easy.",
+          can: "But I can promise that if you choose me, I won't take you for granted."
+        }
+      ];
+
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <h2 className="font-handwritten text-3xl sm:text-4xl text-blush-500 font-bold mb-2 text-center">
+              I don&apos;t want to promise impossible things.
+            </h2>
+            <p className="text-xs text-gray-500 text-center mb-6 font-serif italic">
+              Real promises instead of fake perfection.
+            </p>
+
+            <div className="space-y-3.5">
+              {promises.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-2xl bg-white/80 border border-blush-100 shadow-sm hover:border-blush-300 transition-all"
+                >
+                  <p className="text-xs text-gray-400 line-through mb-1">
+                    {p.cant}
+                  </p>
+                  <p className="text-sm font-medium text-gray-800 leading-snug">
+                    {p.can}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={onContinue}
+              className="mt-6 w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>The question that matters</span>
+              <span>❤️</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 6: THE QUESTION THAT MATTERS
+    // ==========================================
+    function SectionWantToTry({ choice, setChoice, onContinue }) {
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <h2 className="font-handwritten text-4xl text-blush-500 font-bold mb-3 text-center">
+              Do you still want to try?
+            </h2>
+
+            <div className="text-gray-700 text-sm space-y-2 py-2 text-center font-normal">
+              <p className="text-gray-500 italic text-xs">
+                Not because we&apos;ve already spent almost five years together.
+              </p>
+              <p className="text-gray-500 italic text-xs">
+                Not because we&apos;ve been intimate.
+              </p>
+              <p className="text-gray-500 italic text-xs">
+                Not because we are used to each other.
+              </p>
+              <p className="text-gray-500 italic text-xs">
+                Not because I&apos;m asking you to forget everything.
+              </p>
+              <div className="p-3 bg-blush-50 rounded-xl mt-3 text-gray-800 font-medium">
+                Only if somewhere inside you, you still want to see whether we can become better than what we&apos;ve been.
+              </div>
+            </div>
+
+            {choice === null && (
+              <div className="mt-6 space-y-2.5">
+                <button
+                  onClick={() => setChoice('yes')}
+                  className="w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all"
+                >
+                  Yes, let&apos;s try ❤️
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setChoice('not-sure')}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-medium text-xs hover:bg-gray-50"
+                  >
+                    I&apos;m not sure
+                  </button>
+                  <button
+                    onClick={() => setChoice('no')}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-gray-200 text-gray-500 font-medium text-xs hover:bg-gray-50"
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* If YES */}
+            {choice === 'yes' && (
+              <div className="mt-6 p-4 rounded-2xl bg-blush-50 border border-blush-200 animate-fadeIn text-center">
+                <p className="text-sm font-medium text-gray-800 mb-2">
+                  Then let&apos;s not try to recreate the old relationship.
+                </p>
+                <p className="text-sm text-blush-600 font-serif italic mb-4">
+                  Let&apos;s build a better one.
+                </p>
+                <button
+                  onClick={onContinue}
+                  className="w-full py-2.5 rounded-xl bg-blush-400 text-white font-medium text-xs shadow-sm hover:bg-blush-500"
+                >
+                  Continue 🦋
+                </button>
+              </div>
+            )}
+
+            {/* If NOT SURE */}
+            {choice === 'not-sure' && (
+              <div className="mt-6 p-4 rounded-2xl bg-lavender-50 border border-lavender-200 animate-fadeIn">
+                <p className="text-sm text-gray-800 font-medium mb-2">
+                  You don&apos;t have to decide everything today.
+                </p>
+                <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                  Maybe we start with one conversation. No fighting. No accusations. No checking phones. No proving anything. Just two people talking.
+                </p>
+                <button
+                  onClick={onContinue}
+                  className="w-full py-2.5 rounded-xl bg-blush-400 text-white font-medium text-xs shadow-sm hover:bg-blush-500"
+                >
+                  One conversation ❤️
+                </button>
+              </div>
+            )}
+
+            {/* If NO */}
+            {choice === 'no' && (
+              <div className="mt-6 p-5 rounded-2xl bg-gray-50 border border-gray-200 animate-fadeIn text-center">
+                <p className="font-serif text-base text-gray-800 italic mb-2">
+                  I won&apos;t argue with your answer.
+                </p>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                  I love you enough to respect it. Thank you for reading everything I wanted to say.
+                </p>
+                <p className="text-xs text-blush-400 italic mb-4">
+                  If someday you want to talk, you know where to find me.
+                </p>
+                <button
+                  onClick={onContinue}
+                  className="text-xs text-gray-500 underline underline-offset-4"
+                >
+                  Read the last message anyway
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 7: THE REAL PROBLEM (CASTE / REALITY)
+    // ==========================================
+    function SectionTheRealProblem({ onContinue }) {
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="text-center mb-4">
+              <span className="text-xs uppercase tracking-widest text-blush-400 font-semibold">The Unspoken Reality</span>
+              <h2 className="font-handwritten text-3xl sm:text-4xl text-blush-500 font-bold mt-1">
+                There&apos;s one thing I&apos;ve never been able to stop thinking about.
+              </h2>
+            </div>
+
+            <div className="text-gray-700 text-sm sm:text-base leading-relaxed space-y-3.5 font-normal">
+              <p className="font-semibold text-gray-900">
+                Our future isn&apos;t simple. We&apos;re from different castes.
+              </p>
+
+              <p>
+                I know love doesn&apos;t automatically solve family pressure, society, marriage, or everything that comes with the future. I don&apos;t want to lie to you and say everything will magically work out without struggle.
+              </p>
+
+              <div className="p-3.5 bg-blush-50/80 rounded-2xl border border-blush-100 font-serif italic text-gray-800 text-base">
+                &ldquo;If we both genuinely want this, I don&apos;t want fear to make the decision for us before we even try.&rdquo;
+              </div>
+
+              <p>
+                I have never wanted to give up on you easily. But I also don&apos;t want my determination to become pressure on you.
+              </p>
+
+              <p className="font-medium text-blush-600">
+                I want it to be a choice we make together.
+              </p>
+            </div>
+
+            <button
+              onClick={onContinue}
+              className="mt-7 w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>There&apos;s one last thing...</span>
+              <span>🦋</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 8: THE FINAL PROPOSAL (SPECIAL DARK ROMANTIC)
+    // ==========================================
+    function SectionFinalProposal({ choice, setChoice, onContinue }) {
+      return (
+        <div className="w-full">
+          <div className="glass-dark rounded-3xl p-6 sm:p-8 shadow-2xl border border-pink-400/20 text-pink-50 text-center">
+            {/* Glowing Heart Icon */}
+            <div className="inline-block p-4 rounded-full bg-pink-500/10 mb-4 heart-glow border border-pink-500/20">
+              <span className="text-4xl">💖</span>
+            </div>
+
+            <p className="text-xs uppercase tracking-widest text-pink-300 font-semibold mb-1">
+              After everything...
+            </p>
+
+            <h2 className="font-handwritten text-4xl sm:text-5xl text-pink-200 font-bold mb-4">
+              Can I choose you again?
+            </h2>
+
+            <div className="space-y-2 text-sm text-pink-100/80 font-serif italic max-w-xs mx-auto mb-6">
+              <p>Not the perfect version of you.</p>
+              <p>Not the perfect version of me.</p>
+              <p className="text-pink-300 font-medium pt-1 font-sans not-italic text-sm">
+                Just us.
+              </p>
+              <p className="text-xs text-pink-200/70 not-italic pt-1 leading-relaxed">
+                Learning. Growing. Fighting less. Talking more. Trusting more. Laughing again.
+              </p>
+              <p className="text-xs text-pink-200/90 pt-2">
+                And when things get difficult... choosing to talk instead of hurting each other.
+              </p>
+            </div>
+
+            <div className="my-6 p-4 rounded-2xl bg-white/5 border border-pink-300/20">
+              <p className="font-handwritten text-3xl text-pink-300 font-bold">
+                Will you be my person again? ❤️
+              </p>
+            </div>
+
+            {choice === null && (
+              <div className="space-y-2.5">
+                <button
+                  onClick={() => setChoice('yes')}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.01] active:scale-95 transition-all"
+                >
+                  Yes. Let&apos;s start again. ❤️
+                </button>
+                <button
+                  onClick={() => setChoice('time')}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-pink-200 text-xs font-medium transition-all"
+                >
+                  I need time.
+                </button>
+              </div>
+            )}
+
+            {choice === 'yes' && (
+              <div className="mt-5 p-4 rounded-2xl bg-pink-900/40 border border-pink-400/40 animate-fadeIn text-left">
+                <div className="flex items-center gap-2 mb-2 text-pink-300">
+                  <span className="text-xl">✨</span>
+                  <p className="font-handwritten text-2xl font-bold">Then this is our new beginning.</p>
+                </div>
+                <div className="space-y-2 text-xs sm:text-sm text-pink-100/90 leading-relaxed mb-4">
+                  <p>You don&apos;t owe me perfection.</p>
+                  <p>And I don&apos;t owe you control.</p>
+                  <p className="font-medium text-pink-300 pt-1">
+                    We owe each other honesty, respect, communication, and effort.
+                  </p>
+                </div>
+                <button
+                  onClick={onContinue}
+                  className="w-full py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-medium shadow-md"
+                >
+                  One last question →
+                </button>
+              </div>
+            )}
+
+            {choice === 'time' && (
+              <div className="mt-5 p-4 rounded-2xl bg-white/5 border border-white/10 animate-fadeIn">
+                <p className="text-xs text-pink-200 leading-relaxed mb-4">
+                  Take all the time you need. I value your peace far more than a rushed answer.
+                </p>
+                <button
+                  onClick={onContinue}
+                  className="w-full py-2.5 rounded-xl bg-pink-500/80 hover:bg-pink-500 text-white text-xs font-medium"
+                >
+                  Continue to final screen
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // STEP 9: FINAL SCREEN & OPTIONAL WHATSAPP
+    // ==========================================
+    function SectionFinalScreen({ config, meetChoice, setMeetChoice, waChoice, setWaChoice, onRestart }) {
+      const waLink = `https://wa.me/${config.whatsAppNumber}?text=${encodeURIComponent(config.whatsAppMessage)}`;
+
+      return (
+        <div className="w-full">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="text-center mb-6">
+              <span className="text-xs uppercase tracking-widest text-blush-400 font-semibold">One Last Step</span>
+              <h2 className="font-handwritten text-4xl text-blush-500 font-bold mt-1">
+                One last question...
+              </h2>
+              <p className="font-serif text-lg text-gray-800 italic mt-2">
+                Will you come meet me, sit with me, and let us talk properly?
+              </p>
+            </div>
+
+            {meetChoice === null && (
+              <div className="space-y-2.5 mb-6">
+                <button
+                  onClick={() => setMeetChoice('yes')}
+                  className="w-full py-3 px-4 rounded-xl bg-blush-400 hover:bg-blush-500 text-white font-medium text-sm shadow-sm transition-all"
+                >
+                  Yes ❤️
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setMeetChoice('talk-first')}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-medium text-xs hover:bg-gray-50"
+                  >
+                    Let&apos;s talk first
+                  </button>
+                  <button
+                    onClick={() => setMeetChoice('space')}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-gray-200 text-gray-500 font-medium text-xs hover:bg-gray-50"
+                  >
+                    I need some time
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {meetChoice === 'yes' && (
+              <div className="p-4 rounded-2xl bg-blush-50 border border-blush-200 animate-fadeIn mb-6 text-sm text-gray-800 space-y-2 leading-relaxed">
+                <p className="font-medium text-blush-600">Then no long explanations.</p>
+                <p>No checking phones. No proving anything.</p>
+                <div className="py-1 text-gray-700 font-serif italic text-base">
+                  Just come. Let&apos;s sit. Let&apos;s talk. And if you&apos;re comfortable... let me hug you and say sorry properly.
+                </div>
+                <p className="text-xs text-blush-500 font-semibold pt-1">
+                  There&apos;s something else I want to tell you in person. ❤️
+                </p>
+              </div>
+            )}
+
+            {meetChoice === 'talk-first' && (
+              <div className="p-4 rounded-2xl bg-lavender-50 border border-lavender-200 animate-fadeIn mb-6 text-xs text-gray-700 leading-relaxed">
+                <p className="font-semibold text-gray-900 mb-1">Talking first makes total sense.</p>
+                <p>We can start by voice or message whenever you feel ready. No hurry, no pressure.</p>
+              </div>
+            )}
+
+            {meetChoice === 'space' && (
+              <div className="p-4 rounded-2xl bg-cream-100 border border-cream-200 animate-fadeIn mb-6 text-xs text-gray-700 leading-relaxed">
+                <p className="font-semibold text-gray-900 mb-1">I understand completely.</p>
+                <p>Your time and your boundary are respected. I&apos;m not going anywhere.</p>
+              </div>
+            )}
+
+            {/* Optional WhatsApp CTA */}
+            <div className="pt-4 border-t border-gray-100">
+              <p className="text-xs text-center text-gray-500 mb-3">
+                If you want to continue this conversation with me...
+              </p>
+
+              {waChoice !== 'not-ready' ? (
+                <div className="space-y-2">
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+                  >
+                    <span>Message me on WhatsApp</span>
+                    <span>❤️</span>
+                  </a>
+
+                  <button
+                    onClick={() => setWaChoice('not-ready')}
+                    className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    Not ready to message yet
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-gray-50 rounded-xl text-center text-xs text-gray-500">
+                  That is completely okay. You can reach out whenever you feel ready. ❤️
+                </div>
+              )}
+            </div>
+
+            {/* Replay option */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={onRestart}
+                className="text-xs text-blush-400 hover:text-blush-500 underline underline-offset-4"
+              >
+                Read from beginning
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // PERSONALIZATION & SETTINGS MODAL
+    // ==========================================
+    function SettingsModal({ config, onClose, onSave }) {
+      const [formData, setFormData] = useState({ ...config });
+
+      const handlePhotoChange = (index, field, value) => {
+        const updated = [...formData.photos];
+        updated[index] = { ...updated[index], [field]: value };
+        setFormData({ ...formData, photos: updated });
+      };
+
+      const handleFileUpload = (index, file) => {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          handlePhotoChange(index, 'url', reader.result);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 max-h-[88vh] overflow-y-auto shadow-2xl border border-pink-100">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">Personalize This Journey</h3>
+                <p className="text-xs text-gray-500">Edit names, photos &amp; phone number</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-gray-700">
+              <div>
+                <label className="font-semibold block mb-1">Relationship Duration</label>
+                <input
+                  type="text"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
+                  placeholder="e.g. almost 5 years"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1">WhatsApp Number (with country code)</label>
+                <input
+                  type="text"
+                  value={formData.whatsAppNumber}
+                  onChange={(e) => setFormData({ ...formData, whatsAppNumber: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
+                  placeholder="e.g. 91916764653"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1">WhatsApp Pre-filled Message</label>
+                <textarea
+                  rows="2"
+                  value={formData.whatsAppMessage}
+                  onChange={(e) => setFormData({ ...formData, whatsAppMessage: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:border-blush-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-gray-100">
+                <label className="font-semibold block mb-2 text-gray-800">Photos in Timeline (3 Slots)</label>
+                {formData.photos.map((item, idx) => (
+                  <div key={idx} className="p-3 bg-gray-50 rounded-xl mb-3 space-y-2 border border-gray-100">
+                    <p className="font-medium text-blush-500">Photo Slot #{idx + 1}</p>
+                    <input
+                      type="text"
+                      placeholder="Image URL or upload below"
+                      value={item.url}
+                      onChange={(e) => handlePhotoChange(idx, 'url', e.target.value)}
+                      className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id={`upload-${idx}`}
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(idx, e.target.files[0])}
+                      />
+                      <label
+                        htmlFor={`upload-${idx}`}
+                        className="cursor-pointer py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[11px] hover:bg-gray-100 font-medium"
+                      >
+                        📁 Choose photo from device
+                      </label>
+                      {item.url && (
+                        <span className="text-[10px] text-green-600 font-medium">✓ Ready</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Caption"
+                      value={item.caption}
+                      onChange={(e) => handlePhotoChange(idx, 'caption', e.target.value)}
+                      className="w-full p-2 bg-white rounded-lg border border-gray-200 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-gray-100 flex gap-2">
+              <button
+                onClick={() => onSave(formData)}
+                className="flex-1 py-2.5 rounded-xl bg-blush-500 text-white font-medium text-xs shadow-md"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("apology_site_config");
+                  setFormData(DEFAULT_CONFIG);
+                  onSave(DEFAULT_CONFIG);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-gray-200 text-gray-500 text-xs"
+              >
+                Reset Default
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
